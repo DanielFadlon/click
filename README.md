@@ -35,6 +35,17 @@ if __name__ == '__main__':
     hello()
 ```
 
+Passing all options on the command line:
+
+```
+$ python hello.py --count=3 --name=Click
+Hello, Click!
+Hello, Click!
+Hello, Click!
+```
+
+If `--name` is omitted, Click prompts for it interactively:
+
 ```
 $ python hello.py --count=3
 Your name: Click
