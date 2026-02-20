@@ -33,7 +33,7 @@ from .formatting import join_options
 from .globals import pop_context
 from .globals import push_context
 from .parser import _OptionParser
-from .parser import _split_opt
+from .parser import _split_option_string
 from .termui import confirm
 from .termui import prompt
 from .termui import style
@@ -1926,7 +1926,7 @@ class Group(Command):
         # resolve things like --help which now should go to the main
         # place.
         if cmd is None and not ctx.resilient_parsing:
-            if _split_opt(cmd_name)[0]:
+            if _split_option_string(cmd_name)[0]:
                 self.parse_args(ctx, args)
             ctx.fail(_("No such command {name!r}.").format(name=original_cmd_name))
         return cmd_name if cmd else None, cmd, args[1:]
@@ -2910,7 +2910,7 @@ class Option(Parameter):
                     first, second = decl.split(split_char, 1)
                     first = first.rstrip()
                     if first:
-                        possible_names.append(_split_opt(first))
+                        possible_names.append(_split_option_string(first))
                         opts.append(first)
                     second = second.lstrip()
                     if second:
@@ -2921,7 +2921,7 @@ class Option(Parameter):
                             " same flag for true/false."
                         )
                 else:
-                    possible_names.append(_split_opt(decl))
+                    possible_names.append(_split_option_string(decl))
                     opts.append(decl)
 
         if name is None and possible_names:
@@ -3086,7 +3086,7 @@ class Option(Parameter):
             elif self.is_bool_flag and self.secondary_opts:
                 # For boolean flags that have distinct True/False opts,
                 # use the opt without prefix instead of the value.
-                default_string = _split_opt(
+                default_string = _split_option_string(
                     (self.opts if default_value else self.secondary_opts)[0]
                 )[1]
             elif self.is_bool_flag and not self.secondary_opts and not default_value:

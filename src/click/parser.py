@@ -108,7 +108,7 @@ def _unpack_args(
     return tuple(rv), list(args)
 
 
-def _split_opt(opt: str) -> tuple[str, str]:
+def _split_option_string(opt: str) -> tuple[str, str]:
     first = opt[:1]
     if first.isalnum():
         return "", opt
@@ -120,7 +120,7 @@ def _split_opt(opt: str) -> tuple[str, str]:
 def _normalize_opt(opt: str, ctx: Context | None) -> str:
     if ctx is None or ctx.token_normalize_func is None:
         return opt
-    prefix, opt = _split_opt(opt)
+    prefix, opt = _split_option_string(opt)
     return f"{prefix}{ctx.token_normalize_func(opt)}"
 
 
@@ -139,7 +139,7 @@ class _Option:
         self.prefixes: set[str] = set()
 
         for opt in opts:
-            prefix, value = _split_opt(opt)
+            prefix, value = _split_option_string(opt)
             if not prefix:
                 raise ValueError(f"Invalid start character for option ({opt})")
             self.prefixes.add(prefix[0])
