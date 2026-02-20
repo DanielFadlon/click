@@ -33,6 +33,20 @@ def _posixify(name: str) -> str:
     return "-".join(name.split()).lower()
 
 
+def normalize_option_name(name: str) -> str:
+    """Normalize a CLI option string to a Python-friendly identifier.
+
+    Strips leading dashes and replaces interior hyphens with underscores.
+    For example ``"--foo-bar"`` becomes ``"foo_bar"`` and ``"-f"`` becomes
+    ``"f"``.
+
+    :param name: The option string (e.g. ``"--verbose"``, ``"-v"``).
+
+    .. versionadded:: 8.3
+    """
+    return name.lstrip("-").replace("-", "_")
+
+
 def safecall(func: t.Callable[P, R]) -> t.Callable[P, R | None]:
     """Wraps a function so that it swallows exceptions."""
 
@@ -56,23 +70,33 @@ def make_str(value: t.Any) -> str:
     return str(value)
 
 
-def make_default_short_help(help: str, max_length: int = 45) -> str:
-    """Returns a condensed version of help string."""
-    # Consider only the first paragraph.
-    paragraph_end = help.find("\n\n")
+def first_paragraph(text: str) -> list[str]:
+    """Return the words of the first paragraph of *text*.
+
+    The first paragraph is the content before the first blank line
+    (``\\n\\n``).  Newlines, tabs, and spaces are collapsed, and a
+    leading ``\\b`` no-rewrap marker is stripped.
+
+    :param text: The text to extract the first paragraph from.
+
+    .. versionadded:: 8.3
+    """
+    paragraph_end = text.find("\n\n")
 
     if paragraph_end != -1:
-        help = help[:paragraph_end]
+        text = text[:paragraph_end]
 
-    # Collapse newlines, tabs, and spaces.
-    words = help.split()
+    words = text.split()
 
-    if not words:
-        return ""
-
-    # The first paragraph started with a "no rewrap" marker, ignore it.
-    if words[0] == "\b":
+    if words and words[0] == "\b":
         words = words[1:]
+
+    return words
+
+
+def make_default_short_help(help: str, max_length: int = 45) -> str:
+    """Returns a condensed version of help string."""
+    words = first_paragraph(help)
 
     total_length = 0
     last_index = len(words) - 1
@@ -103,7 +127,12 @@ def make_default_short_help(help: str, max_length: int = 45) -> str:
 
         i -= 1
 
-    return " ".join(words[:i]) + "..."
+    result = " ".join(words[:i]) + "..."
+
+    if len(result) > max_length:
+        return ""
+
+    return result
 
 
 class LazyFile:
