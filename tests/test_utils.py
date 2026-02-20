@@ -746,3 +746,20 @@ def test_make_default_short_help(value, max_length, alter, expect):
 
     out = click.utils.make_default_short_help(value, max_length)
     assert out == expect
+
+
+@pytest.mark.parametrize(
+    ("value", "max_length", "expect"),
+    [
+        pytest.param("\b", 45, "", id="only marker"),
+        pytest.param("\b hello", 45, "hello", id="marker then word"),
+        pytest.param("a. b c", 45, "a.", id="sentence end mid-text"),
+        pytest.param("abc", 3, "abc", id="exact fit single word"),
+        pytest.param("a b", 3, "a b", id="exact fit two words"),
+        pytest.param("ab cd ef", 5, "ab...", id="truncate second word"),
+    ],
+)
+def test_make_default_short_help_edge_cases(value, max_length, expect):
+    """Extra edge cases to ensure behavior is preserved after refactoring."""
+    out = click.utils.make_default_short_help(value, max_length)
+    assert out == expect
