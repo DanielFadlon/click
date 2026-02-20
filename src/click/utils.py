@@ -58,52 +58,55 @@ def make_str(value: t.Any) -> str:
 
 def make_default_short_help(help: str, max_length: int = 45) -> str:
     """Returns a condensed version of help string."""
-    # Consider only the first paragraph.
     paragraph_end = help.find("\n\n")
 
     if paragraph_end != -1:
         help = help[:paragraph_end]
 
-    # Collapse newlines, tabs, and spaces.
     words = help.split()
 
     if not words:
         return ""
 
-    # The first paragraph started with a "no rewrap" marker, ignore it.
     if words[0] == "\b":
         words = words[1:]
 
-    total_length = 0
-    last_index = len(words) - 1
+    if not words:
+        return ""
+
+    text_length = 0
+    truncate_at: int | None = None
 
     for i, word in enumerate(words):
-        total_length += len(word) + (i > 0)
+        text_length += len(word) + (1 if i > 0 else 0)
 
-        if total_length > max_length:  # too long, truncate
+        if text_length > max_length:
+            truncate_at = i
             break
 
-        if word[-1] == ".":  # sentence end, truncate without "..."
+        if word.endswith("."):
             return " ".join(words[: i + 1])
 
-        if total_length == max_length and i != last_index:
-            break  # not at sentence end, truncate with "..."
-    else:
-        return " ".join(words)  # no truncation needed
+        if text_length == max_length and i < len(words) - 1:
+            truncate_at = i
+            break
 
-    # Account for the length of the suffix.
-    total_length += len("...")
+    if truncate_at is None:
+        return " ".join(words)
 
-    # remove words until the length is short enough
+    suffix = "..."
+    i = truncate_at
+    text_length += len(suffix)
+
     while i > 0:
-        total_length -= len(words[i]) + (i > 0)
+        text_length -= len(words[i]) + (1 if i > 0 else 0)
 
-        if total_length <= max_length:
+        if text_length <= max_length:
             break
 
         i -= 1
 
-    return " ".join(words[:i]) + "..."
+    return " ".join(words[:i]) + suffix
 
 
 class LazyFile:
