@@ -251,6 +251,21 @@ def test_invalid_path_with_esc_sequence():
     assert "my\\ndir" in exc_info.value.message
 
 
+@pytest.mark.parametrize(
+    "type_factory",
+    [
+        lambda: click.File(mode="r"),
+        lambda: click.File(mode="r", lazy=True),
+        lambda: click.Path(exists=True),
+        lambda: click.Path(),
+    ],
+)
+def test_null_byte_in_path_rejected(type_factory):
+    param_type = type_factory()
+    with pytest.raises(click.BadParameter, match="null character"):
+        param_type.convert("some\x00path", None, None)
+
+
 def test_choice_get_invalid_choice_message():
     choice = click.Choice(["a", "b", "c"])
     message = choice.get_invalid_choice_message("d", ctx=None)
