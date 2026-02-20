@@ -33,6 +33,20 @@ def _posixify(name: str) -> str:
     return "-".join(name.split()).lower()
 
 
+def normalize_option_name(name: str) -> str:
+    """Normalize a CLI option string to a Python-friendly identifier.
+
+    Strips leading dashes and replaces interior hyphens with underscores.
+    For example ``"--foo-bar"`` becomes ``"foo_bar"`` and ``"-f"`` becomes
+    ``"f"``.
+
+    :param name: The option string (e.g. ``"--verbose"``, ``"-v"``).
+
+    .. versionadded:: 8.3
+    """
+    return name.lstrip("-").replace("-", "_")
+
+
 def safecall(func: t.Callable[P, R]) -> t.Callable[P, R | None]:
     """Wraps a function so that it swallows exceptions."""
 
@@ -103,7 +117,12 @@ def make_default_short_help(help: str, max_length: int = 45) -> str:
 
         i -= 1
 
-    return " ".join(words[:i]) + "..."
+    result = " ".join(words[:i]) + "..."
+
+    if len(result) > max_length:
+        return ""
+
+    return result
 
 
 class LazyFile:
