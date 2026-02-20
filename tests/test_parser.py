@@ -30,3 +30,17 @@ def test_parser_collects_prefixes():
     click.Option("+p", is_flag=True).add_to_parser(parser, ctx)
     click.Option("!e", is_flag=True).add_to_parser(parser, ctx)
     assert parser._opt_prefixes == {"-", "--", "+", "!"}
+
+def test_split_option_string_renamed():
+    """Verify the internal helper was renamed from _split_opt."""
+    from click.parser import _split_option_string
+
+    assert _split_option_string("--foo") == ("--", "foo")
+    assert _split_option_string("-f") == ("-", "f")
+    assert _split_option_string("foo") == ("", "foo")
+    assert _split_option_string("++bar") == ("++", "bar")
+
+    import click.parser
+    assert not hasattr(click.parser, "_split_opt"), (
+        "_split_opt should be renamed to _split_option_string"
+    )
