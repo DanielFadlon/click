@@ -6,10 +6,9 @@ import tempfile
 from contextlib import nullcontext
 from typing import Literal
 
-if sys.version_info < (3, 11):
-    enum.StrEnum = enum.Enum  # type: ignore[assignment]
-
 import pytest
+
+_has_str_enum = sys.version_info >= (3, 11)
 
 import click
 from click import Option
@@ -1714,10 +1713,19 @@ class Number(enum.IntEnum):
     TWO = enum.auto()
 
 
-class Letter(enum.StrEnum):
-    NAME_1 = "Value-1"
-    NAME_2 = "Value_2"
-    NAME_3 = "42_value"
+if _has_str_enum:
+
+    class Letter(enum.StrEnum):  # type: ignore[name-defined]
+        NAME_1 = "Value-1"
+        NAME_2 = "Value_2"
+        NAME_3 = "42_value"
+
+else:
+    Letter = None  # type: ignore[assignment,misc]
+
+_skip_no_str_enum = pytest.mark.skipif(
+    not _has_str_enum, reason="enum.StrEnum requires Python 3.11+"
+)
 
 
 class Color(enum.Flag):
@@ -1742,7 +1750,7 @@ class ColorInt(enum.IntFlag):
         (["foo", 1], "[TEXT|INTEGER]"),
         (HashType, "[HASHTYPE]"),
         (Number, "[NUMBER]"),
-        (Letter, "[LETTER]"),
+        pytest.param(Letter, "[LETTER]", marks=_skip_no_str_enum),
         (Color, "[COLOR]"),
         (ColorInt, "[COLORINT]"),
     ],
@@ -1819,12 +1827,18 @@ def test_choice_usage_rendering(runner, choices, metavar):
         (HashType, "SHA256", "SHA256"),
         (Number, Number.TWO, "TWO"),
         (Number, "TWO", "TWO"),
-        (Letter, Letter.NAME_1, "NAME_1"),
-        (Letter, Letter.NAME_2, "NAME_2"),
-        (Letter, Letter.NAME_3, "NAME_3"),
-        (Letter, "NAME_1", "NAME_1"),
-        (Letter, "NAME_2", "NAME_2"),
-        (Letter, "NAME_3", "NAME_3"),
+        *(
+            [
+                pytest.param(Letter, Letter.NAME_1, "NAME_1", marks=_skip_no_str_enum),
+                pytest.param(Letter, Letter.NAME_2, "NAME_2", marks=_skip_no_str_enum),
+                pytest.param(Letter, Letter.NAME_3, "NAME_3", marks=_skip_no_str_enum),
+                pytest.param(Letter, "NAME_1", "NAME_1", marks=_skip_no_str_enum),
+                pytest.param(Letter, "NAME_2", "NAME_2", marks=_skip_no_str_enum),
+                pytest.param(Letter, "NAME_3", "NAME_3", marks=_skip_no_str_enum),
+            ]
+            if _has_str_enum
+            else []
+        ),
         (Color, Color.GREEN, "GREEN"),
         (Color, "GREEN", "GREEN"),
         (ColorInt, ColorInt.GREEN, "GREEN"),
