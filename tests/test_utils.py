@@ -716,6 +716,9 @@ def test_expand_args(monkeypatch):
     ("value", "max_length", "expect"),
     [
         pytest.param("", 10, "", id="empty"),
+        pytest.param("hello world", 0, "", id="max_length zero"),
+        pytest.param("hello world", 1, "", id="max_length tiny"),
+        pytest.param("hello world", 2, "", id="max_length smaller than ellipsis"),
         pytest.param("123 567 90", 10, "123 567 90", id="equal length, no dot"),
         pytest.param("123 567 9. aaaa bbb", 10, "123 567 9.", id="sentence < max"),
         pytest.param("123 567\n\n 9. aaaa bbb", 10, "123 567", id="paragraph < max"),
@@ -746,3 +749,22 @@ def test_make_default_short_help(value, max_length, alter, expect):
 
     out = click.utils.make_default_short_help(value, max_length)
     assert out == expect
+
+
+@pytest.mark.parametrize(
+    ("name", "expected"),
+    [
+        ("--foo-bar", "foo_bar"),
+        ("-f", "f"),
+        ("--verbose", "verbose"),
+        ("-v", "v"),
+        ("--my-long-option", "my_long_option"),
+        ("---triple", "triple"),
+        ("plain", "plain"),
+        ("", ""),
+        ("--already_underscore", "already_underscore"),
+        ("-", ""),
+    ],
+)
+def test_normalize_option_name(name, expected):
+    assert click.utils.normalize_option_name(name) == expected
