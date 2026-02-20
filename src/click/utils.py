@@ -103,7 +103,12 @@ def make_default_short_help(help: str, max_length: int = 45) -> str:
 
         i -= 1
 
-    return " ".join(words[:i]) + "..."
+    result = " ".join(words[:i]) + "..."
+
+    if len(result) > max_length:
+        return ""
+
+    return result
 
 
 class LazyFile:
