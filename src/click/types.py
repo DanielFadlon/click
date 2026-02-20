@@ -823,6 +823,15 @@ class File(ParamType):
 
         value = t.cast("str | os.PathLike[str]", value)
 
+        if "\x00" in os.fspath(value):
+            self.fail(
+                _("'{filename}': Path contains null character.").format(
+                    filename=format_filename(value)
+                ),
+                param,
+                ctx,
+            )
+
         try:
             lazy = self.resolve_lazy_flag(value)
 
@@ -974,6 +983,15 @@ class Path(ParamType):
         rv = value
 
         is_dash = self.file_okay and self.allow_dash and rv in (b"-", "-")
+
+        if not is_dash and "\x00" in os.fspath(rv):
+            self.fail(
+                _("{name} '{filename}': Path contains null character.").format(
+                    name=self.name.title(), filename=format_filename(value)
+                ),
+                param,
+                ctx,
+            )
 
         if not is_dash:
             if self.resolve_path:
