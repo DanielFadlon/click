@@ -733,3 +733,24 @@ def test_help_invalid_default(runner):
     result = runner.invoke(cli, ["--help"])
     assert result.exit_code == 0
     assert "default: not found" in result.output
+
+
+def test_readme_example(runner):
+    """Verify the example from README.md matches actual Click behavior."""
+
+    @click.command()
+    @click.option("--count", default=1, help="Number of greetings.")
+    @click.option("--name", prompt="Your name", help="The person to greet.")
+    def hello(count, name):
+        """Simple program that greets NAME for a total of COUNT times."""
+        for _ in range(count):
+            click.echo(f"Hello, {name}!")
+
+    result = runner.invoke(hello, ["--count=3", "--name=Click"])
+    assert result.exit_code == 0
+    assert result.output == "Hello, Click!\nHello, Click!\nHello, Click!\n"
+
+    result = runner.invoke(hello, ["--count=3"], input="Click\n")
+    assert result.exit_code == 0
+    assert "Your name: " in result.output
+    assert result.output.count("Hello, Click!") == 3
